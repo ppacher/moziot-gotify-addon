@@ -1,0 +1,19 @@
+#
+# Take from github.com/tim-hellhake/spotify-adapter.git
+#
+#!/bin/bash
+
+npm install --production
+
+shasum --algorithm 256 package.json *.js LICENSE > SHA256SUMS
+find node_modules -type f -exec shasum --algorithm 256 {} \; >> SHA256SUMS
+
+TARFILE=`npm pack`
+tar xzf ${TARFILE}
+cp -r node_modules ./package
+tar czf ${TARFILE} package
+
+shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
+
+rm SHA256SUMS
+rm -rf package

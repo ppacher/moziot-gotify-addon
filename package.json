@@ -1,0 +1,89 @@
+{
+  "name": "moziot-gotify-addon",
+  "display_name": "Gotify Notifications",
+  "version": "0.1.0",
+  "description": "Send notifications via Gotify",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ppacher/moziot-gotify-addon.git"
+  },
+  "author": "Patrick Pacher",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/ppacher/moziot-gotify-addon/issues"
+  },
+  "homepage": "https://github.com/ppacher/moziot-gotify-addon#readme",
+  "files": [
+    "LICENSE",
+    "SHA256SUMS",
+    "index.js",
+    "gotify-adapter.js"
+  ],
+  "moziot": {
+    "api": {
+      "min": 2,
+      "max": 2
+    },
+    "plugin": true,
+    "exec": "{nodeLoader} {path}",
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+            "serverURL",
+            "applicationToken",
+            "messages",
+            "name"
+        ],
+        "properties": {
+            "name": {
+                "type": "string",
+                "title": "Name of the gotify server"
+            },
+            "serverURL": {
+                "type": "string",
+                "title": "The gotify server address"
+            },
+            "applicationToken": {
+                "type": "string",
+                "title": "The application token to use when publishing notifications"
+            },
+            "messages": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "title",
+                        "message"
+                    ],
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "title": "The title of the notification"
+                        },
+                        "message": {
+                            "type": "string",
+                            "title": "The message of the notification"
+                        }
+                    }
+                }
+            }
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.16.0"
+  },
+  "dependencies": {
+    "request": "^2.88.0",
+    "requests": "^0.2.2"
+  }
+}
