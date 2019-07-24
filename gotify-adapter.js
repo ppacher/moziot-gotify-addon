@@ -9,47 +9,37 @@ const {
 const request = require('request');
 
 /**
- * Until github.com/mozilla-iot/gateway supports notifications (upcoming 0.9.0) release
- * we wrap predefined messages into properties that can be "triggered". 
- */
-class GotifyProperty extends Property {
-    constructor(device, name, propertyDescr, cfg) {
-        super(device, name, propertyDescr);
-        this.setCachedValue(false);
-        this.cfg = cfg;
-        this.device.notifyPropertyChanged(this);
-    }
-
-    setValue(value) {
-        return new Promise((resolve, reject) => {
-            console.log(`sending notification: title=${this.cfg.title} message=${this.cfg.message}`)
-            // we never change our value
-            resolve(false);
-        });
-    }
-}
-
-/**
  *  GotifyDevice wraps an a gotify application used to notify a user
  */
 class GotifyDevice extends Device {
-    constructor(adapter, name, deviceConfig) {
+    constructor(adapter, manifest, name, deviceConfig) {
         super(adapter, name);
+        this.notifyActions =  {};
+ 
+        this.title = name;
+        this.name = name;
+        
+        this['@context'] = 'https://iot.mozilla.org/schemas/';
+        this.description = 'Gotify Notifications via ' + deviceConfig.name;
+
         this.config = deviceConfig;
         
-        deviceConfig.messages.forEach(msg => this._setupProperty(msg));
+        deviceConfig.messages.forEach(msg => this._setupPredefinedAction(msg));
 
         this._setupAction();
     } 
     
-    _setupProperty(messageConfig) {
-        const property = new GotifyProperty(this, messageConfig.title, {
-            title: messageConfig.title,
-            type: 'boolean',
-            '@type': 'AlarmProperty',
-        }, messageConfig)
-        
-        this.properties.set(messageConfig.title, property);
+    _setupPredefinedAction(messageConfig) {
+        //this.properties.set(messageConfig.title, property);
+
+        this.notifyActions[messageConfig.title] = messageConfig;
+        this.addAction(messageConfig.title, {
+            name: messageConfig.title,
+            metadata: {
+                label: 'Send a predefined notification',
+            }
+        });
+        console.log(`added action for ${messageConfig.title}`);
     }
     
     _setupAction() {
@@ -76,9 +66,45 @@ class GotifyDevice extends Device {
     }
     
     performAction(action) {
-        action.start();
-        console.log(`Sending notification: title=${action.input.title} message=${action.input.message}`);
-        action.finish();
+        return new Promise((resolve, reject) => {
+                let msg = {
+                  title: action.input.title,
+                  message: action.input.message,
+                  priority: action.input.priority,
+                }
+
+                if (action.input.title == undefined) {
+                    msg = this.notifyActions[action.name]
+                }
+
+                action.start();
+                console.log(`Sending notification: title=${msg.title} message=${msg.message}`);
+
+                    request.post(`${this.config.serverURL}/message`, {
+                        headers: {
+                         'X-Gotify-Key': this.config.applicationToken,
+                        },
+                        json: {
+                            message: msg.message,
+                            title: msg.title,
+                            priority: msg.priority,
+                        }
+                    }, (err, response, body) => {
+                        action.finish();
+
+                        if (!!err) {
+                           reject(err);
+                           return;
+                        }
+
+                        if (response.statusCode !== 200) {
+                           reject(body);
+                           return;
+                        }
+
+                        resolve();
+                    })
+        });
     }
 }
 
@@ -87,10 +113,11 @@ class GotifyAdapter extends Adapter {
         super(addonManager, GotifyAdapter.name, manifest.name);
         
         addonManager.addAdapter(this);
-        
-        (manifest.moziot.config || []).forEach(cfg => {
-            const device = new GotifyDevice(this, cfg.name, cfg)
+
+        (manifest.moziot.config.servers || []).forEach(cfg => {
+            const device = new GotifyDevice(this, manifest, cfg.name, cfg)
             this.handleDeviceAdded(device);
+            console.log('Device added for ' + cfg.serverURL);
         });
     }
 }

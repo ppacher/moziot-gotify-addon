@@ -6,7 +6,7 @@
 
 'use strict';
 
-const SpotifyAdapter = require('./gotify-adapter').default;
+const GotifyAdapter = require('./gotify-adapter');
 
 module.exports =
     (addonManager, manifest) => new GotifyAdapter(addonManager, manifest);
