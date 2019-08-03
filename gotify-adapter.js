@@ -3,10 +3,12 @@
 const {
     Adapter,
     Device,
-    Property
+    Notifier,
+    Outlet,
+    Constants
 } = require('gateway-addon');
 
-const request = require('request');
+const notify = require("./notify");
 
 /**
  *  GotifyDevice wraps an a gotify application used to notify a user
@@ -30,8 +32,6 @@ class GotifyDevice extends Device {
     } 
     
     _setupPredefinedAction(messageConfig) {
-        //this.properties.set(messageConfig.title, property);
-
         this.notifyActions[messageConfig.title] = messageConfig;
         this.addAction(messageConfig.title, {
             name: messageConfig.title,
@@ -66,44 +66,63 @@ class GotifyDevice extends Device {
     }
     
     performAction(action) {
-        return new Promise((resolve, reject) => {
-                let msg = {
-                  title: action.input.title,
-                  message: action.input.message,
-                  priority: action.input.priority,
-                }
+        action.start();
 
-                if (action.input.title == undefined) {
-                    msg = this.notifyActions[action.name]
-                }
+        let title = action.input.title;
+        let message = action.input.message;
+        let priority = action.input.priority;
 
-                action.start();
-                console.log(`Sending notification: title=${msg.title} message=${msg.message}`);
+        if (!title) {
+            const msg = this.notifyActions[action.name];
+            title = msg.title;
+            message = msg.message;
+            priority = msg.priority;
+        }
 
-                    request.post(`${this.config.serverURL}/message`, {
-                        headers: {
-                         'X-Gotify-Key': this.config.applicationToken,
-                        },
-                        json: {
-                            message: msg.message,
-                            title: msg.title,
-                            priority: msg.priority,
-                        }
-                    }, (err, response, body) => {
-                        action.finish();
+        return notify(this.config.serverURL, this.config.applicationToken, title, message, priority || 0)
+                .catch(() => {})
+                .then(() => action.finish());
+    }
+}
 
-                        if (!!err) {
-                           reject(err);
-                           return;
-                        }
+class GotifyOutlet extends Outlet {
+    constructor(notifier, config) {
+        super(notifier, config.name);
+        
+        this.name = config.name;
+        this.config = config;
+    }
+    
+    notify(title, message, level) {
+        let priority = 0;
 
-                        if (response.statusCode !== 200) {
-                           reject(body);
-                           return;
-                        }
+        switch (level) {
+        case Constants.NotificationLevel.LOW:
+            priority = 1;
+            break;
+        case Constants.NotificationLevel.NORMAL:
+            priority = 5;
+            break;
+        case Constants.NotificationLevel.HIGH:
+            priority = 9;
+            break;
+        }
 
-                        resolve();
-                    })
+        return notify(this.config.serverURL, this.config.applicationToken, title, message, priority);
+    }
+}
+
+class GotifyNotifier extends Notifier {
+    constructor(addonManager, manifest) {
+        super(addonManager, GotifyNotifier.name, manifest.name);
+
+        addonManager.addNotifier(this);
+
+        (manifest.moziot.config.servers || []).forEach(cfg => {
+            if (!this.outlets[cfg.name]) {
+                const outlet = new GotifyOutlet(this, cfg);
+                this.handleOutletAdded(outlet);
+            }
         });
     }
 }
@@ -122,4 +141,7 @@ class GotifyAdapter extends Adapter {
     }
 }
 
-module.exports = GotifyAdapter;
+module.exports = {
+    GotifyAdapter,
+    GotifyNotifier
+};

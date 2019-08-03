@@ -1,109 +1,112 @@
 {
-  "name": "moziot-gotify-addon",
-  "display_name": "Gotify Notifications",
-  "version": "0.1.0",
-  "description": "Send notifications via Gotify",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint ."
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ppacher/moziot-gotify-addon.git"
-  },
-  "author": "Patrick Pacher",
-  "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/ppacher/moziot-gotify-addon/issues"
-  },
-  "homepage": "https://github.com/ppacher/moziot-gotify-addon#readme",
-  "files": [
-    "LICENSE",
-    "SHA256SUMS",
-    "index.js",
-    "gotify-adapter.js"
-  ],
-  "moziot": {
-    "api": {
-      "min": 2,
-      "max": 2
-    },
-    "plugin": true,
-    "exec": "{nodeLoader} {path}",
-    "schema": {
-      "type": "object",
-      "required": ["servers"],
-      "properties": {
-        "servers": {
-	      "type": "array",
-	      "items": {
-		"type": "object",
-		"required": [
-		    "serverURL",
-		    "applicationToken",
-		    "messages",
-		    "name"
+		"name": "moziot-gotify-addon",
+		"display_name": "Gotify Notifications",
+		"version": "0.2.0",
+		"description": "Send notifications via Gotify",
+		"main": "index.js",
+		"scripts": {
+				"test": "echo \"Error: no test specified\" && exit 1",
+				"lint": "eslint ."
+		},
+		"repository": {
+				"type": "git",
+				"url": "git+https://github.com/ppacher/moziot-gotify-addon.git"
+		},
+		"author": "Patrick Pacher",
+		"license": "MPL-2.0",
+		"bugs": {
+				"url": "https://github.com/ppacher/moziot-gotify-addon/issues"
+		},
+		"homepage": "https://github.com/ppacher/moziot-gotify-addon#readme",
+		"files": [
+				"LICENSE",
+				"SHA256SUMS",
+				"index.js",
+				"gotify-adapter.js",
+				"notify.js"
 		],
-		"properties": {
-		    "name": {
-			"type": "string",
-			"title": "Name",
-			"description": "Name of the gotify server"
-		    },
-		    "serverURL": {
-			"type": "string",
-			"title": "Server Address",
-			"description": "The gotify server address"
-		    },
-		    "applicationToken": {
-			"type": "string",
-			"title": "Application Token",
-			"description": "The application token to use when publishing notifications"
-		    },
-		    "messages": {
-			"type": "array",
-			"title": "Predefined Messages",
-			"description": "Predefined messages will be available as OnOffProperties",
-			"items": {
-			    "type": "object",
-			    "title": "Message",
-			    "required": [
-				"title",
-				"message",
-				"priority"
-			    ],
-			    "properties": {
-				"priority": {
-				    "type": "integer",
-				    "title": "Priority",
-				    "description": "The priority of the message"
+		"moziot": {
+				"api": {
+						"min": 2,
+						"max": 2
 				},
-				"title": {
-				    "type": "string",
-				    "title": "Title / Subject",
-				    "description": "The title of the notification"
-				},
-				"message": {
-				    "type": "string",
-				    "title": "Message",
-				    "description": "The message of the notification"
+				"plugin": true,
+				"exec": "{nodeLoader} {path}",
+				"schema": {
+						"type": "object",
+						"required": [
+								"servers"
+						],
+						"properties": {
+								"servers": {
+										"type": "array",
+										"items": {
+												"type": "object",
+												"required": [
+														"serverURL",
+														"applicationToken",
+														"messages",
+														"name"
+												],
+												"properties": {
+														"name": {
+																"type": "string",
+																"title": "Name",
+																"description": "Name of the gotify server"
+														},
+														"serverURL": {
+																"type": "string",
+																"title": "Server Address",
+																"description": "The gotify server address"
+														},
+														"applicationToken": {
+																"type": "string",
+																"title": "Application Token",
+																"description": "The application token to use when publishing notifications"
+														},
+														"messages": {
+																"type": "array",
+																"title": "Predefined Messages",
+																"description": "Predefined messages will be available as OnOffProperties",
+																"items": {
+																		"type": "object",
+																		"title": "Message",
+																		"required": [
+																				"title",
+																				"message",
+																				"priority"
+																		],
+																		"properties": {
+																				"priority": {
+																						"type": "integer",
+																						"title": "Priority",
+																						"description": "The priority of the message"
+																				},
+																				"title": {
+																						"type": "string",
+																						"title": "Title / Subject",
+																						"description": "The title of the notification"
+																				},
+																				"message": {
+																						"type": "string",
+																						"title": "Message",
+																						"description": "The message of the notification"
+																				}
+																		}
+																}
+														}
+												}
+										}
+								}
+						}
 				}
-			    }
-			}
-		    }
+		},
+		"devDependencies": {
+				"babel-eslint": "^10.0.1",
+				"eslint": "^5.16.0"
+		},
+		"dependencies": {
+				"request": "^2.88.0",
+				"requests": "^0.2.2"
 		}
-	      }
-	    }
-      }
-    }	
-  },
-  "devDependencies": {
-    "babel-eslint": "^10.0.1",
-    "eslint": "^5.16.0"
-  },
-  "dependencies": {
-    "request": "^2.88.0",
-    "requests": "^0.2.2"
-  }
 }

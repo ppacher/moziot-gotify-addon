@@ -6,7 +6,23 @@
 
 'use strict';
 
-const GotifyAdapter = require('./gotify-adapter');
+const gotify = require('./gotify-adapter');
+const {GotifyNotifier, GotifyAdapter} = gotify;
 
-module.exports =
-    (addonManager, manifest) => new GotifyAdapter(addonManager, manifest);
+module.exports = (addonManager, manifest, errorCallback) => {
+    try {
+        new GotifyAdapter(addonManager, manifest);
+    } catch(err) {
+        errorCallback(manifest.name, err)
+    }
+
+    try {
+        new GotifyNotifier(addonManager, manifest);
+    } catch (err) {
+        if (e instanceof TypeError) {
+            errorCallback(manifest.name, `Gateway does not support notifieries`);
+        } else {
+            errorCallback(manifest.name, e);
+        }
+    }
+};
